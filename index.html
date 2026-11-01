@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown to 12 AM GMT+8</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 35px;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
+    .label {
+      font-size: 0.9rem;
+      opacity: 0.65;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    #current-time {
+      font-size: 2.6rem;
+      font-weight: 300;
+      margin-bottom: 45px;
+      letter-spacing: 2px;
+    }
+    #countdown {
+      font-size: 4.5rem;
+      font-weight: 300;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      text-shadow: 0 0 30px rgba(255, 107, 107, 0.35);
+    }
+    #message-link {
+      display: none;
+      margin-top: 35px;
+      padding: 18px 42px;
+      background: #ff6b6b;
+      color: white;
+      text-decoration: none;
+      font-size: 1.35rem;
+      font-weight: 500;
+      border-radius: 50px;
+      box-shadow: 0 10px 28px rgba(255, 107, 107, 0.45);
+      transition: all 0.25s ease;
+    }
+    .birthday {
+      margin-top: 36px;
+      font-size: 3rem;
+      color: #ffd166;
+      text-shadow: 0 0 30px rgba(255, 209, 102, 0.4);
+    }
+    #message-link:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 35px rgba(255, 107, 107, 0.6);
+    }
+    .status {
+      margin-top: 28px;
+      font-size: 1.15rem;
+      opacity: 0.75;
+    }
+  </style>
+</head>
+<body>
+  <h1>Countdown to 12:00 AM (GMT+8)</h1>
+
+  <div class="label">Current time • GMT+8</div>
+  <div id="current-time">--:--:--</div>
+
+  <div class="label">Time remaining</div>
+  <div id="countdown">--:--:--</div>
+
+  <a id="message-link" href="Birthday.html">Happy Birthday Mommy</a>
+
+  <section id="birthday" class="birthday" hidden>
+    <h2>Happy Birthday, Mommy!</h2>
+  </section>
+
+  <p class="status" id="status">Waiting for midnight...</p>
+
+  <script>
+    const currentTimeEl = document.getElementById('current-time');
+    const countdownEl   = document.getElementById('countdown');
+    const linkEl        = document.getElementById('message-link');
+    const statusEl      = document.getElementById('status');
+
+    const TIMEZONE = 'Asia/Singapore';
+    const GMT_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+    function getNextMidnight() {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: TIMEZONE,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+      }).formatToParts(new Date());
+      const dateParts = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+      const nextDayUtc = Date.UTC(
+        Number(dateParts.year),
+        Number(dateParts.month) - 1,
+        Number(dateParts.day) + 1
+      );
+      return nextDayUtc - GMT_OFFSET_MS;
+    }
+
+    const targetMidnight = getNextMidnight();
+
+    function update() {
+      const now = new Date();
+
+      const timeStr = now.toLocaleTimeString('en-US', {
+        timeZone: TIMEZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      currentTimeEl.textContent = timeStr;
+
+      const diff = targetMidnight - now.getTime();
+
+      if (diff <= 0) {
+        countdownEl.textContent = '00:00:00';
+        linkEl.style.display = 'inline-block';
+        document.getElementById('birthday').hidden = false;
+        if (window.location.hash !== '#birthday') {
+          window.location.hash = 'birthday';
+        }
+        statusEl.textContent = 'It\'s 12:00 AM!';
+        statusEl.style.color = '#ff6b6b';
+        statusEl.style.opacity = '1';
+      } else {
+        const totalSeconds = Math.floor(diff / 1000);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        countdownEl.textContent =
+          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+        linkEl.style.display = 'none';
+        statusEl.textContent = 'Waiting for midnight...';
+        statusEl.style.color = 'white';
+        statusEl.style.opacity = '0.75';
+      }
+    }
+
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
